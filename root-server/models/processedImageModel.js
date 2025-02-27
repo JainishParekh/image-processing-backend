@@ -24,4 +24,4 @@ const processedImageSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('ProcessedImage', processedImageSchema);
+module.exports = mongoose.model('processed_image', processedImageSchema);

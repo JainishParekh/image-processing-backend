@@ -1,75 +1,50 @@
 const { parse } = require('csv-parse');
-const ProcessedImage = require('../models/processedImageModel');
 const Request = require('../models/requestModel');
-const s3Service = require('./s3Service');
 const logger = require('../utils/logger');
 
-  const validateCSV = (headers) => {
-    const requiredHeaders = ['Serial Number', 'Product Name', 'Image URLs'];
-    return requiredHeaders.every(header => headers.includes(header));
+const validateHeaders = (headers) => {
+  const requiredHeaders = ['S. No.', 'Product Name', 'Input Image Urls'];
+  if (headers.length !== requiredHeaders.length) {
+    throw new Error('Invalid number of headers');
   }
+  return requiredHeaders.every(header => headers.includes(header));
+}
 
-  const processCSV = async (file) => {
-    try {
-      const request = await Request.create({
-        filename: file.originalname
-      });
+const getCSVHeaders = async (fileBuffer) => {
+  return new Promise((resolve, reject) => {
+    parse(fileBuffer, { columns: true, skip_empty_lines: true }, (err, records) => {
+      if (err) return reject(err);
+      resolve(Object.keys(records[0] || {})); // Extract headers from first row
+    });
+  });
+};
 
-      // Process CSV asynchronously
-      processCSVAsync(file, request._id);
 
-      return {
-        requestId: request._id,
-        status: 'accepted'
-      };
-    } catch (error) {
-      logger.error('Error processing CSV:', error);
-      throw error;
-    }
-  }
-
-  const processCSVAsync = async (file, requestId) => {
-    const parser = parse({
-      columns: true,
-      skip_empty_lines: true
+const processCSV = async (file) => {
+  try {
+    const request = await Request.create({
+      filename: file.originalname
     });
 
-    try {
-      for await (const record of parser) {
-        const imageUrls = record['Image URLs'].split(',').map(url => url.trim());
-        const processedUrls = [];
+    const headers = await getCSVHeaders(file.buffer);
 
-        for (const url of imageUrls) {
-          const imageResponse = await fetch(url);
-          const imageBuffer = await imageResponse.buffer();
-          const key = `processed/${requestId}/${Date.now()}.jpg`;
-          const processedUrl = await s3Service.uploadOptimizedImage(imageBuffer, key);
-          processedUrls.push(processedUrl);
-        }
-
-        await ProcessedImage.create({
-          requestId,
-          serialNumber: record['Serial Number'],
-          productName: record['Product Name'],
-          originalImageUrl: record['Image URLs'],
-          processedImageUrl: processedUrls.join(',')
-        });
-      }
-
-      await Request.findByIdAndUpdate(requestId, { status: 'completed' });
-      await triggerWebhook(requestId);
-    } catch (error) {
-      logger.error('Error in async CSV processing:', error);
-      await Request.findByIdAndUpdate(requestId, { status: 'failed' });
+    if (!validateHeaders(headers)) {
+      throw new Error('Invalid CSV headers');
     }
-  }
 
-  const triggerWebhook = async (requestId) => {
-    // Implement webhook notification logic here
-  }
+    // Process CSV asynchronously using a separate function
+    // processCSVAsync(file, request._id);
 
+    return {
+      requestId: request._id,
+      status: 'processing'
+    };
+  } catch (error) {
+    logger.error('Error processing CSV:', error);
+    throw error;
+  }
+}
 
 module.exports = {
-  validateCSV,
-  processCSV,
+  processCSV
 };

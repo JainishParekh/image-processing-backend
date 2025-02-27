@@ -5,11 +5,14 @@ const requestSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  s3Filename: {
+    type: String, 
+  },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'completed', 'failed'],
-    default: 'pending'
+    enum: ['processing', 'completed', 'failed'],
+    default: 'processing'
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Request', requestSchema);
+module.exports = mongoose.model('request', requestSchema);

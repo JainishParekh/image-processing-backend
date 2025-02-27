@@ -6,12 +6,10 @@ const uploadCSV = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No CSV file provided' });
     }
-
     const result = await imageService.processCSV(req.file);
     res.status(202).json(result);
   } catch (error) {
-    logger.error('Error in upload controller:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 }
 
@@ -35,7 +33,6 @@ const getStatus = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
-
 
 module.exports = {
   uploadCSV,

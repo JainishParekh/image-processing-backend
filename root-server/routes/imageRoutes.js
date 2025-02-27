@@ -2,19 +2,9 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const imageController = require('../controllers/imageController');
+const { upload } = require('../services/s3Service');
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'text/csv') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only CSV files are allowed'));
-    }
-  }
-});
-
-router.post('/upload', upload.single('csv'), imageController.uploadCSV);
+router.post('/upload', upload.single('file'), imageController.uploadCSV);
 router.get('/status/:requestId', imageController.getStatus);
 
 module.exports = router;
