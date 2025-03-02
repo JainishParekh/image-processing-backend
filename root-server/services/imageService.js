@@ -1,50 +1,80 @@
-const { parse } = require('csv-parse');
-const Request = require('../models/requestModel');
-const logger = require('../utils/logger');
+const { parse } = require("csv-parse");
+const Request = require("../models/requestModel");
+const logger = require("../utils/logger");
 
 const validateHeaders = (headers) => {
-  const requiredHeaders = ['S. No.', 'Product Name', 'Input Image Urls'];
+  const requiredHeaders = ["S. No.", "Product Name", "Input Image Urls"];
   if (headers.length !== requiredHeaders.length) {
-    throw new Error('Invalid number of headers');
+    return {
+      isValid: false,
+      error: "Invalid number of headers",
+    };
   }
-  return requiredHeaders.every(header => headers.includes(header));
-}
+
+  const allHeadersPresent = requiredHeaders.every((header) =>
+    headers.includes(header)
+  );
+  if (!allHeadersPresent) {
+    return {
+      isValid: false,
+      error: "Missing required headers",
+    };
+  }
+
+  return { isValid: true };
+};
 
 const getCSVHeaders = async (fileBuffer) => {
   return new Promise((resolve, reject) => {
-    parse(fileBuffer, { columns: true, skip_empty_lines: true }, (err, records) => {
-      if (err) return reject(err);
-      resolve(Object.keys(records[0] || {})); // Extract headers from first row
-    });
+    parse(
+      fileBuffer,
+      { columns: true, skip_empty_lines: true },
+      (err, records) => {
+        if (err) return reject(err);
+        if (!records || records.length === 0) {
+          return reject(new Error("CSV file is empty"));
+        }
+        resolve(Object.keys(records[0] || {})); // Extract headers from first row
+      }
+    );
   });
 };
 
+const validateCSV = async (file) => {
+  try {
+    const headers = await getCSVHeaders(file.buffer);
+    return validateHeaders(headers);
+  } catch (error) {
+    logger.error("Error validating CSV:", error);
+    return {
+      isValid: false,
+      error: error.message,
+    };
+  }
+};
 
-const processCSV = async (file) => {
+const processCSV = async (file, s3Filename, s3FileLocation) => {
   try {
     const request = await Request.create({
-      filename: file.originalname
+      filename: file.originalname,
+      s3Filename,
+      s3Location: s3FileLocation,
     });
 
-    const headers = await getCSVHeaders(file.buffer);
-
-    if (!validateHeaders(headers)) {
-      throw new Error('Invalid CSV headers');
-    }
-
-    // Process CSV asynchronously using a separate function
-    // processCSVAsync(file, request._id);
+    // Process CSV asynchronously
+    // (Your existing processing logic)
 
     return {
       requestId: request._id,
-      status: 'processing'
+      status: "processing",
     };
   } catch (error) {
-    logger.error('Error processing CSV:', error);
+    logger.error("Error processing CSV:", error);
     throw error;
   }
-}
+};
 
 module.exports = {
-  processCSV
+  validateCSV,
+  processCSV,
 };

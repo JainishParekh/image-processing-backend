@@ -1,17 +1,40 @@
-const imageService = require('../services/imageService');
-const logger = require('../utils/logger');
+const { validateCSV, processCSV } = require("../services/imageService");
+const { uploadToS3 } = require("../services/s3Service");
+const logger = require("../utils/logger");
 
 const uploadCSV = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No CSV file provided' });
+      return res.status(400).json({ error: "No CSV file provided" });
     }
-    const result = await imageService.processCSV(req.file);
-    res.status(202).json(result);
+
+    // validate the CSV file
+    const validateResult = await validateCSV(req.file);
+    if (!validateResult.isValid) {
+      return res.status(400).json({
+        error: validationResult.error || "Invalid CSV file",
+      });
+    }
+
+    // upload the csv file to s3 bucket
+    const uploadToS3Result = await uploadToS3(req.file);
+
+    // process the CSV file
+    const processResult = await processCSV(
+      req.file,
+      uploadToS3Result.uploadedFilename,
+      uploadToS3Result.location
+    );
+
+    res.status(202).json({
+      ...validateResult,
+      ...processResult,
+      uploadedToS3: uploadToS3Result,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
-}
+};
 
 const getStatus = async (req, res) => {
   try {
@@ -19,22 +42,22 @@ const getStatus = async (req, res) => {
     const request = await Request.findById(requestId);
 
     if (!request) {
-      return res.status(404).json({ error: 'Request not found' });
+      return res.status(404).json({ error: "Request not found" });
     }
 
     res.status(200).json({
       status: request.status,
       requestId: request._id,
       createdAt: request.createdAt,
-      updatedAt: request.updatedAt
+      updatedAt: request.updatedAt,
     });
   } catch (error) {
-    logger.error('Error in status controller:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    logger.error("Error in status controller:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
 module.exports = {
   uploadCSV,
-  getStatus
+  getStatus,
 };
