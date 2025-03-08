@@ -1,4 +1,8 @@
-const { validateCSV, processCSV } = require("../services/imageService");
+const {
+  validateCSV,
+  processCSV,
+  getRequestStatus,
+} = require("../services/imageService");
 const { uploadToS3 } = require("../services/s3Service");
 const logger = require("../utils/logger");
 
@@ -40,7 +44,7 @@ const uploadCSV = async (req, res) => {
 const getStatus = async (req, res) => {
   try {
     const { requestId } = req.params;
-    const request = await Request.findById(requestId);
+    const request = await getRequestStatus(requestId);
 
     if (!request) {
       return res.status(404).json({ error: "Request not found" });
