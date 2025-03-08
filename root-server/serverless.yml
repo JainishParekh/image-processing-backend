@@ -1,0 +1,60 @@
+service: express-mongodb-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  timeout: 30 # Increased timeout for file uploads
+  memorySize: 1024 # Increased memory for file processing
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+    MONGODB_URI: ${env:MONGODB_URI}
+    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+    AWS_REGION: ${env:AWS_REGION}
+    AWS_BUCKET: ${env:AWS_BUCKET}
+    WEBHOOK_URL: ${env:WEBHOOK_URL}
+  apiGateway:
+    binaryMediaTypes:
+      - "multipart/form-data"
+
+functions:
+  api:
+    handler: lambda.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+package:
+  individually: true
+  exclude:
+    - server.js
+    - index.js
+    - .env
+    - .env.*
+    - .git/**
+    - test/**
+    - README.md
+  include:
+    - lambda.js
+    - app.js
+    - config/**
+    - routes/**
+    - utils/**
+    - models/**
+    - services/**
+    - controllers/**
+    - package.json
+    - package-lock.json
+    - node_modules/**
