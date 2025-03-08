@@ -231,7 +231,16 @@ const triggerWebhook = async (requestId, status, outputCsvUrl) => {
   }
 };
 
+const getRequestStatus = async (id) => {
+  try {
+    return await Request.findById(id);
+  } catch (error) {
+    logger.error(`Failed to get status : `, error);
+  }
+};
+
 module.exports = {
   validateCSV,
   processCSV,
+  getRequestStatus,
 };
