@@ -1,12 +1,13 @@
 // Load environment variables
-require('dotenv').config();
+require("dotenv").config();
 
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
 
-const connectDB = require('./config/database');
-const imageRoutes = require('./routes/imageRoutes');
-const logger = require('./utils/logger');
+const connectDB = require("./config/database");
+const imageRoutes = require("./routes/imageRoutes");
+const webhookRoutes = require("./routes/webhookRoutes");
+const logger = require("./utils/logger");
 
 const app = express();
 
@@ -18,12 +19,13 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/csv', imageRoutes);
+app.use("/api/csv", imageRoutes);
+app.use("/webhook", webhookRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  logger.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 module.exports = app;

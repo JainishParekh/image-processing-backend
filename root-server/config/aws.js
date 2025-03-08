@@ -8,6 +8,9 @@ const s3 = new S3Client({
     accessKeyId: awsAccessKey,
     secretAccessKey: awsAccessSecretKey,
   },
+  forcePathStyle: true,
+  computeChecksums: false,
+  checksumAlgorithm: undefined,
 });
 
 module.exports = {

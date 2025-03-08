@@ -17,7 +17,8 @@ const uploadCSV = async (req, res) => {
     }
 
     // upload the csv file to s3 bucket
-    const uploadToS3Result = await uploadToS3(req.file);
+    const fileName = Date.now().toString() + "-" + req.file.originalname;
+    const uploadToS3Result = await uploadToS3(req.file, fileName);
 
     // process the CSV file
     const processResult = await processCSV(

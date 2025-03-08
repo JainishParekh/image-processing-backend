@@ -14,6 +14,12 @@ const requestSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    outputCsvUrl: {
+      type: String,
+    },
+    processingTime: {
+      type: String,
+    },
     status: {
       type: String,
       enum: ["processing", "completed", "failed"],
