@@ -14,10 +14,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use("/api/csv", imageRoutes);
-app.use("/webhook", webhookRoutes);
-
 // Error handling for multer and other errors
 app.use((err, req, res, next) => {
   if (err.name === "MulterError") {
@@ -39,5 +35,9 @@ app.use((err, req, res, next) => {
   logger.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
+
+// Routes
+app.use("/api/csv", imageRoutes);
+app.use("/webhook", webhookRoutes);
 
 module.exports = app;

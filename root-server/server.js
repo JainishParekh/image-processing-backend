@@ -1,6 +1,6 @@
 // server.js - Only used for local development
 const app = require("./app");
-const connectDB = require("./config/database.config");
+const connectDB = require("./config/database");
 const { port } = require("./config/env");
 const logger = require("./utils/logger");
 

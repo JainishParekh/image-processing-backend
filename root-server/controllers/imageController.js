@@ -16,7 +16,7 @@ const uploadCSV = async (req, res) => {
     const validateResult = await validateCSV(req.file);
     if (!validateResult.isValid) {
       return res.status(400).json({
-        error: validationResult.error || "Invalid CSV file",
+        error: validateResult.error || "Invalid CSV file",
       });
     }
 

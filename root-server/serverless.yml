@@ -5,14 +5,11 @@ provider:
   runtime: nodejs18.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  timeout: 30 # Increased timeout for file uploads
-  memorySize: 1024 # Increased memory for file processing
+  timeout: 30
+  memorySize: 1024
   environment:
     NODE_ENV: ${env:NODE_ENV}
     MONGODB_URI: ${env:MONGODB_URI}
-    AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
-    AWS_REGION: ${env:AWS_REGION}
     AWS_BUCKET: ${env:AWS_BUCKET}
     WEBHOOK_URL: ${env:WEBHOOK_URL}
   apiGateway:
@@ -21,7 +18,7 @@ provider:
 
 functions:
   api:
-    handler: lambda.handler
+    handler: index.handler
     events:
       - http:
           path: /
@@ -58,3 +55,8 @@ package:
     - package.json
     - package-lock.json
     - node_modules/**
+
+custom:
+  esbuild:
+    external:
+      - sharp
